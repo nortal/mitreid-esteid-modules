@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.1.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.1.xsd">
+
+	<util:list id="delegateClients">
+		<bean id="googleClient" class="org.pac4j.oauth.client.Google2Client">
+			<property name="key" value="${google.key}" />
+			<property name="secret" value="${google.secret}" />
+		</bean>
+
+		<bean id="facebookClient" class="org.pac4j.oauth.client.FacebookClient">
+			<property name="key" value="${fb.key}" />
+			<property name="secret" value="${fb.secret}" />
+		</bean>
+
+		<bean id="casClient" class="org.pac4j.cas.client.CasClient">
+			<property name="casLoginUrl" value="${cas.login.url}" />
+		</bean>
+	</util:list>
+</beans>

@@ -1,0 +1,5 @@
+dependencies {
+	overlay project(overlayDep('delegate'))
+	overlay project(overlayDep('id-card'))
+	overlay project(overlayDep('mobile-id'))
+}

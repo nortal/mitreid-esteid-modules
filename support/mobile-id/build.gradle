@@ -1,0 +1,67 @@
+buildscript {
+    repositories { jcenter() }
+    dependencies {
+        classpath "org.apache.cxf:cxf-tools:2.5.1",
+                "org.apache.cxf:cxf-tools-wsdlto-databinding-jaxb:2.5.1",
+                "org.apache.cxf:cxf-tools-wsdlto-frontend-jaxws:2.5.1",
+                "log4j:log4j:1.2.17"
+    }
+}
+
+license {
+	// Exclude generated sources
+	exclude "ee/**/*.*"
+}
+
+project.ext {
+    wsdlDir = file("src/main/wsdl")
+    generatedSourcesDir = file("build/generated-sources/wsdl")
+    //generatedWsdlDir = file("build/classes/main")
+    
+    wsdlsToGenerate = [
+        [
+            '-autoNameResolution',
+            //'-compile',
+            '-allowElementReferences',
+            '-p',
+            'ee.sk.digidocservice',
+            '-d',
+            generatedSourcesDir,
+            file("src/main/wsdl/digidocservice.sk.ee.wsdl")
+        ]
+    ]
+}
+
+task wsdl2java {
+    inputs.dir wsdlDir
+    outputs.dir generatedSourcesDir
+} doLast {
+    def generator = new org.apache.cxf.tools.wsdlto.WSDLToJava();
+    wsdlsToGenerate.each { args ->
+        args.add(args.size - 1, '-classdir')
+        args.add(args.size - 1, generatedSourcesDir)
+        String[] argument = new String[args.size]
+        println "Calling wsdl2java with "
+        args.eachWithIndex { arg, i ->
+            argument[i] = arg.toString()
+            print argument[i] + " "
+        }
+        println " "
+        generator.main(argument)
+    }
+}
+
+
+configurations { wsdl }
+sourceSets.main.java.srcDir generatedSourcesDir
+
+
+dependencies {
+	compile project(supportDep('base'))
+	
+	compile 'org.apache.commons:commons-lang3:3.3.2'
+	
+	testCompile 'junit:junit:4.11'
+}
+
+compileJava.dependsOn wsdl2java

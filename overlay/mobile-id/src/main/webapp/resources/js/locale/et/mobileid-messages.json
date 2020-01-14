@@ -1,0 +1,40 @@
+{
+	"login": {
+		"mobile": {
+			"login": "Logi sisse Mobiil-ID'ga",
+			"number" : "Mobiiltelefoni number",
+			"number_or_code": "Mobiiltelefoni number või isikukood",
+			"continue" : "Jätka",
+			"cancel" : "Katkesta",
+			"sending_message": "Sõnumit saadetakse, palun oodake",
+			"check_code": "Veendu, et Sinu mobiiltelefonile saadetud kontrollkood on sama, mida näed siin. Seejärel sisesta oma mobiiltelefoni Mobiil-ID PIN1-kood.",
+			"code": "Kontrollkood",
+			"error": {
+				"INVALID_PHONE_NUMBER": {
+					"text": "Mobiilinumber on vale formaadiga.",
+					"sub": "Palun kontrollige, et sisestasite selle õigesti."
+				},
+				"NOT_MOBILE_ID_CLIENT": {
+					"text": "Teil ei ole kehtivat Mobiil-ID lepingut.",
+					"sub": "Lepingut on võimalik sõlmida mobiilioperaatorite juures."
+				},
+				"USER_CERTIFICATE_MISSING": {
+					"text": "Teie Mobiil-ID sertifikaadid ei ole aktiveeritud.",
+					"sub": ""
+				},
+				"INVALID_CERTIFICATE": {
+					"text": "Teie Mobiil-ID sertifikaadid on aegunud.",
+					"sub": ""
+				},
+				"USER_CANCEL": {
+					"text": "Mobiil-ID kaudu sisselogimine oli katkestatud.",
+					"sub": ""
+				},
+				"EXPIRED_TRANSACTION": {
+					"text": "Mobiil-ID sessioon on aegunud.",
+					"sub": "Palun proovige uuesti."
+				}
+			}
+		}
+	}
+}

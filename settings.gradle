@@ -1,0 +1,21 @@
+include 'support', 'overlay'
+include 'overlay:base', 'support:base'
+include 'overlay:direct-access', 'support:direct-access'
+include 'overlay:logout'
+include 'overlay:ad', 'support:ad'
+include 'overlay:id-card', 'support:id-card'
+include 'overlay:mobile-id', 'support:mobile-id'
+include 'overlay:delegate', 'support:delegate'
+include 'overlay:cas'
+include 'overlay:ad-delegate'
+include 'overlay:eid-delegate'
+include 'overlay:safe-manage'
+
+rootProject.children.each {
+	it.name = rootProject.name + "-" + it.name
+
+	//All modules have hierarchical names (prefix + parent name + submodule name)
+	it.children.each {
+		it.name = it.parent.name + "-" + it.name
+	}
+}

@@ -1,0 +1,40 @@
+{
+	"login": {
+		"mobile": {
+			"login": "Log in with Mobile-ID",
+			"number": "Phone number",
+			"number_or_code": "Phone number or Person Code",
+			"continue": "Continue",
+			"cancel": "Cancel",
+			"sending_message": "Sending message, please wait",
+			"check_code": "Please check that you see following number on your device, then input pin 1.",
+			"code": "Code",
+			"error": {
+				"INVALID_PHONE_NUMBER": {
+					"text": "Invalid phone number",
+					"sub": "Please check whether you entered it correctly."
+				},
+				"NOT_MOBILE_ID_CLIENT": {
+					"text": "Not an active Mobile-ID client.",
+					"sub": "You can sign up with Mobile-ID at your mobile operator."
+				},
+				"USER_CERTIFICATE_MISSING": {
+					"text": "Your Mobile-ID certificates are not active.",
+					"sub": ""
+				},
+				"INVALID_CERTIFICATE": {
+					"text": "Your Mobile-ID certificates are expired.",
+					"sub": ""
+				},
+				"USER_CANCEL": {
+					"text": "Login with Mobile-ID has been interrupted.",
+					"sub": ""
+				},
+				"EXPIRED_TRANSACTION": {
+					"text": "Mobile-ID session has expired.",
+					"sub": "Please try again."
+				}
+			}
+		}
+	}
+}

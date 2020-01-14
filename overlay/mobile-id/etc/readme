@@ -1,0 +1,9 @@
+For mobile-id to work:
+
+1. make sure the application has access to sk-s digidocservice.sk.ee
+2. import digidocservice.sk.ee ssl certificate into java ssl trust (in case of default trust store, $JAVA_HOME/jre/lib/security/cacerts)
+3. include digidocservice parameters in oidc.properties:
+	# service name registered with mobile id contract (shown to user on phone screen during login)
+	digidocservice.serviceName=ServiceName
+	# secret used to sign MID state data during authentication process so we can keep in browser.
+	digidocservice.state.secret=

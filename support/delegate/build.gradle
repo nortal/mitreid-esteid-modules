@@ -1,0 +1,7 @@
+dependencies {
+	compile project(supportDep('base'))
+	
+	compile 'org.pac4j:pac4j-oauth:1.9+'
+	compile 'org.pac4j:pac4j-oidc:1.9+'
+}
+

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.1.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.1.xsd">
+		
+	<import resource="delegate-clients.xml" />
+	
+	<bean id="clients" class="org.pac4j.core.client.Clients">
+		<property name="callbackUrl"
+			value="${portal.issuer}/${oauth.callback.url:oauth/callback}" />
+		<property name="clients" ref="delegateClients" />
+	</bean>
+
+	<bean
+		class="com.nortal.oidc.mitre.delegate.NullWrappingAuthenticationSuccessHandler"
+		id="nullWrappingAuthenticationSuccessHandler">
+		<property name="delegate" ref="authenticationTimeStamper" />
+	</bean>
+	
+	<bean id="clientFilter"
+		class="com.nortal.oidc.mitre.delegate.ClientAuthenticationFilter">
+		<constructor-arg value="/${oauth.callback.url:oauth/callback}" />
+		<property name="clients" ref="clients" />
+		<property name="userDetailsService" ref="pac4jUserDetailsService" />
+		<property name="authenticationManager" ref="authenticationManager" />
+		<property name="authenticationSuccessHandler" ref="nullWrappingAuthenticationSuccessHandler" />
+		<property name="authenticationFailureHandler" ref="defaultAuthenticationFailureHandler"/>
+	</bean> 
+
+	<bean id="pac4jUserDetailsService" class="com.nortal.oidc.mitre.delegate.Pac4jUserDetailsService" />
+
+	<bean class="com.nortal.oidc.mitre.delegate.Pac4jUserInfoCreator" id="pac4jUserInfoCreator" />
+	
+	<mvc:interceptors>
+		<bean id="pac4jInterceptor" class="com.nortal.oidc.mitre.delegate.Pac4jInterceptor" />
+	</mvc:interceptors>
+</beans>

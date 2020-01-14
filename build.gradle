@@ -1,0 +1,64 @@
+buildscript {
+  repositories {
+    jcenter()
+  }
+  dependencies {
+    classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.0.0"
+  }
+}
+
+plugins {
+	id "com.github.hierynomus.license" version "0.15.0" apply false
+}
+
+allprojects {
+	group = 'com.nortal.oidc'
+	version = '0.2'
+	
+	repositories {
+		jcenter()
+	}
+	
+	apply from: "${rootDir}/gradle-include/eclipse.gradle"
+		
+	ext.mitreidVersion = '1.2.6'
+	
+	ext.p = { type, name, conf='default' ->
+		def fullType = ':' + rootProject.name + '-' + type
+		[path: fullType + fullType + '-' + name, configuration: conf]
+	}
+	
+	ext.overlayDep = {
+		p('overlay', it, 'lightWarc')
+	}
+	
+	ext.supportDep = {
+		p('support', it)
+	}
+}
+
+if (project.hasProperty('artifactoryUser')) {
+	apply plugin: "com.jfrog.artifactory"
+
+  artifactory {
+    contextUrl = "${artifactoryContextUrl}"
+    publish {
+      repository {
+        repoKey = "${artifactoryRepo}"
+        username = "${artifactoryUser}"
+        password = "${artifactoryPassword}"
+        maven = true
+      }       
+    }
+  }       
+}
+
+configure(subprojects.findAll {it.name.contains('support')}) {
+	apply plugin: 'java'
+	apply plugin: 'com.github.hierynomus.license'
+  
+  license {
+	  header rootProject.file('LICENSE_HEADER')
+    strictCheck true
+	}
+}

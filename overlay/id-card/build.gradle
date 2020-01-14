@@ -1,0 +1,5 @@
+dependencies {
+	overlay project(overlayDep('base'))
+	compile project(supportDep('id-card'))
+}
+

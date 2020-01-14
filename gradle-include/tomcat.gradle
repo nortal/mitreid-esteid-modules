@@ -1,0 +1,47 @@
+if (project.hasProperty('tomcatHome')) {
+
+if (!project.hasProperty('warName')) {
+	ext.warName = project.name
+} else {
+	war.archiveName = warName + ".war"
+}
+
+task stopTomcat(type: Exec) {
+	workingDir "${tomcatHome}/bin"
+	commandLine './catalina.sh', 'stop'
+}
+
+stopTomcat.doLast {
+	sleep(1000)
+}
+
+task cleanTomcat(type: Delete){
+	delete "${tomcatHome}/webapps/${warName}", "${tomcatHome}/webapps/${warName}.war"
+}
+
+task deploy(type: Copy) {
+	from war
+	into "${tomcatHome}/webapps"
+}
+
+task startTomcat(type: Exec) {
+	workingDir "${tomcatHome}/bin"
+	if (project.hasProperty('jpda')){
+		commandLine './catalina.sh', 'jpda', 'start'
+	} else {
+		commandLine './catalina.sh', 'start'
+	}
+}
+
+task redeploy { 
+  doLast {
+	  println "Redeployed"
+  }
+}
+
+startTomcat.dependsOn deploy
+deploy.mustRunAfter cleanTomcat
+cleanTomcat.mustRunAfter stopTomcat
+redeploy.dependsOn stopTomcat, cleanTomcat, startTomcat
+
+}

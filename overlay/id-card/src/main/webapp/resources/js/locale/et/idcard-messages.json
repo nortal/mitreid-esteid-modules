@@ -1,0 +1,11 @@
+{
+	"login": {
+		"idcard": {
+			"login": "Logi sisse ID-kaardiga",
+			"error": {
+				"text": "Sisenemine ebaõnnestus.",
+				"sub": "Palun kontrolli, et ID-kaart on korrektselt kaardilugejas ja proovi uuesti."
+			}
+		}
+	}
+}

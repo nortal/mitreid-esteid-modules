@@ -1,0 +1,28 @@
+To setup id-card support for the app, you'll need to configure the first server the user connects to 
+(generally the loadbalancer: apache/nginx) to require client certificate from the brower.
+
+For the server to know which client certificates to even ask for, you'll need to give the server a list of ca certificates 
+(current sk CA-s are in id_ca.crt file, this can be used as is in apache).
+
+To configure apache for id-card, setup ssl in apache first, then configure the following in ssl vhost (on port 443):
+
+# point apache to the list of allowed client certificate CA certs.
+SSLCACertificateFile "conf/ssl/id_ca.crt"
+
+# tell apache to require client certificate at the applications /idlogin path. 
+  <Location /<oidc_path>/idlogin*>
+    SSLOptions +StdEnvVars
+    SSLVerifyClient optional
+    SSLVerifyDepth  2
+    SSLOptions +OptRenegotiate
+    RewriteEngine On
+    RewriteCond %{SSL:SSL_CLIENT_VERIFY} !^SUCCESS$
+    RewriteRule .* /oidc/login?error=idcard [R,L]
+  </Location>
+
+
+
+For backend validation of id-card certificate to work, the server needs access to sk ocsp service (ocsp.sk.ee) and a valid jdigidoc.cfg reference in oidc.properties:
+
+esteid.jdigidoc.config=/path/to/jdigidoc-prod.cfg
+

@@ -1,0 +1,30 @@
+subprojects {
+	apply plugin: 'java'
+	apply plugin: 'maven-publish'
+	
+	
+	dependencies {
+		compile 'org.projectlombok:lombok:1.16.8'
+		compileOnly 'javax.servlet:javax.servlet-api:3.1.0'
+	}
+	
+	publishing {
+	    publications {
+	        mavenJava(MavenPublication) {
+	            from components.java
+	        }
+	    }
+	}		
+}
+
+if (rootProject.hasProperty('artifactoryUser')) {
+	      subprojects {
+          apply plugin: "com.jfrog.artifactory"
+          println(project)
+	        publishing {
+	                artifactoryPublish {
+	                        publications ('mavenJava')
+	                }
+	        }
+        }
+}

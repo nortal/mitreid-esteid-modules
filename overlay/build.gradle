@@ -1,0 +1,71 @@
+subprojects {
+	apply plugin: 'war'
+
+	apply from: "${rootDir}/gradle-include/tomcat.gradle"
+	
+	apply plugin: 'maven-publish'
+	
+	repositories {
+		mavenCentral()
+	}
+
+	configurations {
+		overlay
+		providedCompile.extendsFrom(overlay)
+		all*.exclude module: 'log4j-over-slf4j'
+		prewar
+		prewar.extendsFrom(providedCompile)
+		prewar.extendsFrom(runtime)
+		warc
+		warc.extendsFrom(prewar)
+		lightWarc
+		lightWarc.extendsFrom(prewar)
+	}
+
+	
+	task lightWar(type: War) {
+		
+	}
+	
+	war {
+		duplicatesStrategy = 'exclude'
+		
+		// doFirst postpones iteration on overlay configuration and therefore its resolution, 
+		// so that it can be changed in other files.
+		doFirst {
+			println('^');
+			configurations.overlay.filter({it.name.endsWith(".war")}).each {
+				from zipTree(it)
+				println('* ' + it.name)
+			}
+			println(' ');
+		}
+	}
+	
+	artifacts {
+		warc war
+		lightWarc lightWar
+	}
+	
+	publishing {
+		publications {
+			mavenWeb(MavenPublication) {
+				//We need dependencies, components.web does not provide any
+				from components.java
+				artifacts = [lightWar]
+			}
+		}
+	}
+}
+
+if (rootProject.hasProperty('artifactoryUser')) {
+	      subprojects {
+          apply plugin: "com.jfrog.artifactory"
+          println(project)
+	        publishing {
+	                artifactoryPublish {
+	                        publications ('mavenWeb')
+	                }
+	        }
+        }
+}

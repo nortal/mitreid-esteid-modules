@@ -1,0 +1,10 @@
+dependencies {
+	overlay('org.mitre:openid-connect-server-webapp:' + mitreidVersion) 
+	{
+		exclude module: 'bcprov-jdk15on'
+	}
+	
+	providedCompile 'javax.servlet:javax.servlet-api:3.1.0'
+	
+	compile project(p('support', 'base')) 
+}

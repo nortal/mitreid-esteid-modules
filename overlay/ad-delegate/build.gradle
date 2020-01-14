@@ -1,0 +1,5 @@
+dependencies {
+	overlay project(overlayDep('direct-access'))
+	overlay project(overlayDep('delegate'))
+	overlay project(overlayDep('ad'))
+}

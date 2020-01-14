@@ -1,0 +1,5 @@
+dependencies {
+	compile('org.mitre:openid-connect-server:' + mitreidVersion){
+		exclude module: 'bcprov-jdk15on'
+	}
+}

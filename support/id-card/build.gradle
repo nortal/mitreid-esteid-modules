@@ -1,0 +1,8 @@
+dependencies {
+	compile project(supportDep('base'))
+	
+	compile ('ee.sk.digidoc:jdigidoc:3.12.1') {
+		exclude group: 'iaik.pkcs'
+	}
+}
+

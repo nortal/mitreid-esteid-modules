@@ -1,0 +1,5 @@
+dependencies {
+	compile project(supportDep('base'))
+	
+	compile 'org.ldaptive:ldaptive:1.1.0'
+}

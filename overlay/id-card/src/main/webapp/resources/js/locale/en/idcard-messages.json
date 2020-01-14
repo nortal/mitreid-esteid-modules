@@ -1,0 +1,11 @@
+{
+	"login": {
+		"idcard": {
+			"login": "Log in with ID-card",
+			"error": {
+				"text": "Login failed.",
+				"sub": "Please check whether ID-card is in the card reader and try again."
+			}
+		}
+	}
+}

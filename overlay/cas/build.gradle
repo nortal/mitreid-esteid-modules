@@ -1,0 +1,5 @@
+dependencies {
+	overlay project(overlayDep('delegate'))
+	
+	compile 'org.pac4j:pac4j-cas:1.8+'
+}
