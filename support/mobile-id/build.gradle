@@ -35,7 +35,7 @@ project.ext {
 task wsdl2java {
     inputs.dir wsdlDir
     outputs.dir generatedSourcesDir
-} doLast {
+} << {
     def generator = new org.apache.cxf.tools.wsdlto.WSDLToJava();
     wsdlsToGenerate.each { args ->
         args.add(args.size - 1, '-classdir')
