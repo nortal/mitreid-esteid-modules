@@ -1,3 +1,5 @@
+rootProject.name = 'mitreid'
+
 include 'support', 'overlay'
 include 'overlay:base', 'support:base'
 include 'overlay:direct-access', 'support:direct-access'

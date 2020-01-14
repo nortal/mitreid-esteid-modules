@@ -57,15 +57,3 @@ subprojects {
 		}
 	}
 }
-
-if (rootProject.hasProperty('artifactoryUser')) {
-	      subprojects {
-          apply plugin: "com.jfrog.artifactory"
-          println(project)
-	        publishing {
-	                artifactoryPublish {
-	                        publications ('mavenWeb')
-	                }
-	        }
-        }
-}
