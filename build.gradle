@@ -37,20 +37,28 @@ allprojects {
 	}
 }
 
-if (project.hasProperty('artifactoryUser')) {
-	apply plugin: "com.jfrog.artifactory"
+subprojects {
+	apply plugin: 'maven-publish'
+	
+	publishing {
+		if (!project.hasProperty('bintrayUsername')) {
+    		ext.bintrayUsername = ''
+  		}
+  	
+	  	if (!project.hasProperty('bintrayPassword')) {
+	    	ext.bintrayPassword = ''
+	  	}
 
-  artifactory {
-    contextUrl = "${artifactoryContextUrl}"
-    publish {
-      repository {
-        repoKey = "${artifactoryRepo}"
-        username = "${artifactoryUser}"
-        password = "${artifactoryPassword}"
-        maven = true
-      }       
-    }
-  }       
+	  	repositories {
+	        maven {
+	        	url 'https://api.bintray.com/maven/nortal/maven/mitreid-esteid-modules/'
+	            credentials {
+	                username bintrayUsername
+	                password bintrayPassword
+	            }
+	        }
+	    }
+	}
 }
 
 configure(subprojects.findAll {it.name.contains('support')}) {
