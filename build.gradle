@@ -51,7 +51,7 @@ subprojects {
 
 	  	repositories {
 	        maven {
-	        	url 'https://api.bintray.com/maven/nortal/maven/mitreid-esteid-modules/'
+	        	url 'https://api.bintray.com/maven/nortal/mitreid-esteid-modules/mitreid'
 	            credentials {
 	                username bintrayUsername
 	                password bintrayPassword
