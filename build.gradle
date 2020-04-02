@@ -13,7 +13,7 @@ plugins {
 
 allprojects {
 	group = 'com.nortal.oidc'
-	version = '0.2'
+	version = '0.3.3'
 	
 	repositories {
 		jcenter()
@@ -40,6 +40,10 @@ allprojects {
 subprojects {
 	apply plugin: 'maven-publish'
 	
+  tasks.withType(GenerateModuleMetadata) {
+    enabled = false
+  }
+
 	publishing {
 		if (!project.hasProperty('bintrayUsername')) {
     		ext.bintrayUsername = ''
