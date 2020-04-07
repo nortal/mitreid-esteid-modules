@@ -35,19 +35,20 @@ project.ext {
 task wsdl2java {
     inputs.dir wsdlDir
     outputs.dir generatedSourcesDir
-} << {
-    def generator = new org.apache.cxf.tools.wsdlto.WSDLToJava();
-    wsdlsToGenerate.each { args ->
-        args.add(args.size - 1, '-classdir')
-        args.add(args.size - 1, generatedSourcesDir)
-        String[] argument = new String[args.size]
-        println "Calling wsdl2java with "
-        args.eachWithIndex { arg, i ->
-            argument[i] = arg.toString()
-            print argument[i] + " "
-        }
-        println " "
-        generator.main(argument)
+    doLast {
+      def generator = new org.apache.cxf.tools.wsdlto.WSDLToJava();
+      wsdlsToGenerate.each { args ->
+          args.add(args.size - 1, '-classdir')
+          args.add(args.size - 1, generatedSourcesDir)
+          String[] argument = new String[args.size]
+          println "Calling wsdl2java with "
+          args.eachWithIndex { arg, i ->
+              argument[i] = arg.toString()
+              print argument[i] + " "
+          }
+          println " "
+          generator.main(argument)
+      }
     }
 }
 

@@ -45,7 +45,7 @@ class MobileIdService {
   @PostConstruct
   void init() {
     try {
-      wsdl = new URL("http://www.sk.ee/DigiDocService/DigiDocService_2_3.wsdl");
+      wsdl = new URL("https://www.sk.ee/DigiDocService/DigiDocService_2_3.wsdl");
     } catch (MalformedURLException e) {
       log.error(e.getMessage(), e);
       throw new RuntimeException(e);
