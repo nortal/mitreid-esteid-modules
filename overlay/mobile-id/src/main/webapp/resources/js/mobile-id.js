@@ -45,13 +45,18 @@ MID = (function() {
 		var mid = this;
 
 		var phoneNr = $('#log-phone').val();
-		if (!phoneNr)
+		var idcode = $('#log-idcode').val();
+		if (!phoneNr || !idcode)
 			return;
-
+        
 		this.setStageVisibility('.mid-phase-2');
 
 		$.ajax({
-			url : 'mobileId?action=start&phone=' + phoneNr,
+			url : 'mobileId?' + $.param({
+				action: 'start',
+				phone: phoneNr,
+				personCode: idcode
+			}),
 			type : 'GET',
 			dataType : 'JSON',
 			cache : false
@@ -90,13 +95,13 @@ MID = (function() {
 			url: 'mobileId?action=status&payload='+payload,
 			type:'GET', dataType:'JSON', cache:false
 		}).then(function(result) {
-			if(result.status==='USER_AUTHENTICATED') {
-				mid.finalizeAuthentication(payload, csrfKey, csrfToken);
+			if(result.status==='COMPLETE') {
+				mid.finalizeAuthentication(result.payload, csrfKey, csrfToken);
 				return;
 			}
 
-			if(result.status==='OUTSTANDING_TRANSACTION') {
-				mid.queueStatusCheck(5000, payload, csrfKey, csrfToken);
+			if(result.status==='RUNNING') {
+				mid.queueStatusCheck(5000, result.payload, csrfKey, csrfToken);
 				return;
 			}
 

@@ -25,8 +25,8 @@ class MobileIdUserInfoCreator extends DefaultUserInfoCreator {
 		ui.setPreferredUsername(username);
 		ui.setSub("ESTID::" + username);
 
-		ui.setGivenName(midResult.getUserGivenName());
-		ui.setFamilyName(midResult.getUserSurname());
+		ui.setGivenName(midResult.getIdentity().getGivenName());
+		ui.setFamilyName(midResult.getIdentity().getSurName());
 		ui.setName(ui.getGivenName() + " " + ui.getFamilyName());
 
 		ui.setPhoneNumber(midResult.getUserPhoneNr());

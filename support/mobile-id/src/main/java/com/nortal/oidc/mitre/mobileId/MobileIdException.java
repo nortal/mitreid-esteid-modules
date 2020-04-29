@@ -26,16 +26,18 @@ import lombok.Getter;
 public class MobileIdException extends Exception {
   private static final long serialVersionUID = 1L;
 
-  private MobileIdFault error;
-  private String faultDetail;
+  private String error;
 
-  public MobileIdException(MobileIdFault error, Throwable t) {
-    this(error, null, t);
-  }
-
-  public MobileIdException(MobileIdFault error, String faultDetail, Throwable t) {
-    super(t);
+  public MobileIdException(String error) {
     this.error = error;
-    this.faultDetail = faultDetail;
+  }
+  
+  public MobileIdException(MobileIdFault error) {
+    this.error = error.name();  
+  }
+  
+  public MobileIdException(MobileIdFault error, Throwable t) {
+    super(t);
+    this.error = error.name();  
   }
 }
