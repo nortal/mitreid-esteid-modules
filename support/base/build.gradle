@@ -2,4 +2,5 @@ dependencies {
 	compile('org.mitre:openid-connect-server:' + mitreidVersion){
 		exclude module: 'bcprov-jdk15on'
 	}
+	compile 'jakarta.annotation:jakarta.annotation-api:1.3.4'
 }

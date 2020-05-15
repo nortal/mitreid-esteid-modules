@@ -16,6 +16,8 @@
 package com.nortal.oidc.mitre.mobileId;
 
 import java.util.Date;
+
+import ee.sk.mid.MidAuthenticationIdentity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -25,21 +27,18 @@ import lombok.NoArgsConstructor;
  * @author <a href="mailto:toomas.parna@nortal.com">Toomas Pärna</a>
  */
 @Data
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 public class MobileIdResult {
+  private String sessionId;
+  private String hash;
+  private MidAuthenticationIdentity identity;
+  
   private int sessionCode;
   private MobileIdStatus status;
   private String challengeId;
-
-  private String userCountry;
-  private String userIdCode;
-  private String userGivenName;
-  private String userSurname;
   private String userPhoneNr;
-
-  private String certificateData;
 
   private Date timestamp;
 }

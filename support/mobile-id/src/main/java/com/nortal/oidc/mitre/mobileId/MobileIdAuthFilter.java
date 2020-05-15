@@ -15,14 +15,11 @@
  */
 package com.nortal.oidc.mitre.mobileId;
 
-import java.io.IOException;
-import java.security.GeneralSecurityException;
-
-import javax.annotation.PostConstruct;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import ee.sk.mid.MidLanguage;
+import lombok.Builder;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,11 +31,15 @@ import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import javax.annotation.PostConstruct;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
-import lombok.Builder;
-import lombok.extern.slf4j.Slf4j;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.security.GeneralSecurityException;
+import java.util.Locale;
 
 /**
  * @author <a href="mailto:toomas.parna@nortal.com">Toomas Pärna</a>
@@ -51,7 +52,7 @@ class MobileIdAuthFilter extends AbstractAuthenticationProcessingFilter {
 
   @Autowired
   private MobileIdService mobileIdService;
-
+  
   @Value("${digidocservice.state.secret}")
   private String midSecret;
 
@@ -87,7 +88,7 @@ class MobileIdAuthFilter extends AbstractAuthenticationProcessingFilter {
     } catch (MobileIdException mide) {
       log.warn("", mide);
       writeResponse(response, MIDResult.builder()
-              .status(mide.getError().name())
+              .status(mide.getError())
               .build());
       return null;
     }
@@ -105,27 +106,32 @@ class MobileIdAuthFilter extends AbstractAuthenticationProcessingFilter {
 
     personCode = StringUtils.trimToEmpty(personCode).replaceAll("\\s", "");
     phone = StringUtils.trimToEmpty(phone).replaceAll("\\s", "");
-	if (phone.startsWith("+")) {
-		phone = phone.substring(1);
-	} else {
-		if (!phone.matches("^372.*"))// XXX: include other MID supported country prefixes
-			phone = "372" + phone;
-	}
+		if (!phone.matches("^\\+.*")) { // XXX: include other MID supported country prefixes
+			phone = "+372" + phone;
+		}
 
-    MobileIdResult midResult = mobileIdService.startAuthentication("EE", personCode, phone, "EST");
-    if (midResult.getStatus() == MobileIdStatus.OK) {
-      writeResponse(response, MIDResult.builder()
-              .status("OK")
-              .challengeId(midResult.getChallengeId())
-              .payload(encryptMIDData(midResult))
-              .build());
-      return;
-    }
 
+    MobileIdResult midResult = mobileIdService.startAuthentication(personCode, phone, getLanguage(request));
+    
     writeResponse(response, MIDResult.builder()
-            .status(midResult.getStatus().name())
+            .status("OK")
+            .challengeId(midResult.getChallengeId())
+            .payload(encryptMIDData(midResult))
             .build());
-
+  }
+  
+  private MidLanguage getLanguage(HttpServletRequest request) {
+    Object locale = request.getSession(false).getAttribute("ui_locales");
+    if (locale instanceof Locale) {
+      String language = ((Locale) locale).getLanguage();
+      if ("en".equals(language)) {
+        return MidLanguage.ENG;
+      }
+      if ("ru".equals(language)) {
+        return MidLanguage.RUS;
+      }
+    }
+    return MidLanguage.EST;
   }
 
   private void checkMIDSessionStatus(HttpServletRequest request, HttpServletResponse response) throws IOException,
@@ -134,9 +140,10 @@ class MobileIdAuthFilter extends AbstractAuthenticationProcessingFilter {
     if (midResult == null)
       return;
 
-    MobileIdStatus status = mobileIdService.checkAuthenticationStatus(midResult.getSessionCode());
+    MobileIdResult newResult = mobileIdService.checkAuthenticationStatus(midResult);
     writeResponse(response, MIDResult.builder()
-            .status(status.getCode())
+            .status(newResult.getStatus().name())
+            .payload(encryptMIDData(newResult))
             .build());
   }
 
@@ -146,8 +153,7 @@ class MobileIdAuthFilter extends AbstractAuthenticationProcessingFilter {
     if (midResult == null)
       return null;
 
-    //String principal = midResult.getUserCountry() + midResult.getUserIdCode();
-    String principal = midResult.getUserIdCode();
+    String principal = midResult.getIdentity().getIdentityCode();
 
     PreAuthenticatedAuthenticationToken token = new PreAuthenticatedAuthenticationToken(principal, midResult);
     final Authentication authentication = getAuthenticationManager().authenticate(token);
@@ -192,7 +198,7 @@ class MobileIdAuthFilter extends AbstractAuthenticationProcessingFilter {
   private <DATA> void writeResponse(HttpServletResponse resp, DATA data) {
     resp.setContentType("application/json");
     try {
-      IOUtils.write(json.writeValueAsBytes(data), resp.getWriter());
+      IOUtils.write(json.writeValueAsBytes(data), resp.getWriter(), Charset.forName("utf-8"));
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

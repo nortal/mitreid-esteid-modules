@@ -15,152 +15,126 @@
  */
 package com.nortal.oidc.mitre.mobileId;
 
-import lombok.RequiredArgsConstructor;
-
-import ee.sk.digidocservice.DigiDocService;
-import ee.sk.digidocservice.DigiDocServicePortType;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Date;
-import java.util.Random;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import javax.annotation.PostConstruct;
-import javax.xml.soap.Detail;
-import javax.xml.ws.Holder;
-import javax.xml.ws.soap.SOAPFaultException;
+import ee.sk.mid.MidAuthentication;
+import ee.sk.mid.MidAuthenticationError;
+import ee.sk.mid.MidAuthenticationHashToSign;
+import ee.sk.mid.MidAuthenticationResponseValidator;
+import ee.sk.mid.MidAuthenticationResult;
+import ee.sk.mid.MidClient;
+import ee.sk.mid.MidHashType;
+import ee.sk.mid.MidInputUtil;
+import ee.sk.mid.MidLanguage;
+import ee.sk.mid.exception.MidInternalErrorException;
+import ee.sk.mid.exception.MidInvalidNationalIdentityNumberException;
+import ee.sk.mid.exception.MidInvalidPhoneNumberException;
+import ee.sk.mid.exception.MidSessionNotFoundException;
+import ee.sk.mid.rest.dao.MidSessionStatus;
+import ee.sk.mid.rest.dao.request.MidAuthenticationRequest;
+import ee.sk.mid.rest.dao.request.MidSessionStatusRequest;
+import ee.sk.mid.rest.dao.response.MidAuthenticationResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 
-/**
- * @author <a href="mailto:toomas.parna@nortal.com">Toomas Pärna</a>
- */
+import javax.annotation.PostConstruct;
+
+import java.util.Date;
+import java.util.List;
+
 @Slf4j
 class MobileIdService {
-  private URL wsdl;
-
-  @Value("${digidocservice.serviceName}")
-  private String midServiceName;
-
+  
+  @Value("${mid.service.url}")
+  private String serviceUrl;
+  
+  @Value("${mid.service.name}")
+  private String serviceName;
+  
+  @Value("${mid.service.uuid}")
+  private String serviceUuid;
+  
+  private MidClient midClient;
+  
   @PostConstruct
-  void init() {
-    try {
-      wsdl = new URL("https://www.sk.ee/DigiDocService/DigiDocService_2_3.wsdl");
-    } catch (MalformedURLException e) {
-      log.error(e.getMessage(), e);
-      throw new RuntimeException(e);
-    }
-    checkDigidocServiceConnection();
-
-    if (midServiceName == null)
-      throw new IllegalArgumentException("MID service name is required");
-    log.info("MID using serviceName: {}", midServiceName);
+  private void init() {
+    midClient = MidClient.newBuilder()
+                  .withHostUrl(serviceUrl)
+                  .withRelyingPartyUUID(serviceUuid)
+                  .withRelyingPartyName(serviceName)
+                  .build();
   }
 
-  private void checkDigidocServiceConnection() {
-    Holder<String> srvName = new Holder<>();
-    Holder<String> srvVersion = new Holder<>();
-    Holder<String> srvLibName = new Holder<>();
-    Holder<String> srvLibVersion = new Holder<>();
-    getPort().getVersion(srvName, srvVersion, srvLibName, srvLibVersion);
-
-    // lets make sure we can connect to digidocService
-    log.info("Active digidocService version: {}/{}/{}/{}",
-             srvName.value,
-             srvVersion.value,
-             srvLibName.value,
-             srvLibVersion.value);
-  }
-
-  public MobileIdResult startAuthentication(String country, String personCode, String phoneNr, String language)
+  public MobileIdResult startAuthentication(String personCode, String phoneNr, MidLanguage language)
           throws MobileIdException {
     try {
-      MidAuthResponseHolder resp = new MidAuthResponseHolder();
-      String challenge = generateChallenge();
-      getPort().mobileAuthenticate(personCode, country, phoneNr, language, midServiceName, "",
-                                   challenge, "asynchClientServer", 0, true, false,
+      MidAuthenticationHashToSign authHash = MidAuthenticationHashToSign.generateRandomHashOfDefaultType();
+      String verificationCode = authHash.calculateVerificationCode();
 
-                                   // response data in holders
-                                   resp.sessionCode,
-                                   resp.status,
-                                   resp.userIdCode,
-                                   resp.userGivenName,
-                                   resp.userSurname,
-                                   resp.userCountry,
-                                   resp.userCommonName,
-                                   resp.userCertData,
-                                   resp.challengeId,
-                                   resp.challenge,
-                                   resp.revocationData);
+      MidAuthenticationRequest req =
+              MidAuthenticationRequest.newBuilder()
+                .withPhoneNumber(MidInputUtil.getValidatedPhoneNumber(phoneNr))
+                .withHashToSign(authHash)
+                .withNationalIdentityNumber(MidInputUtil.getValidatedNationalIdentityNumber(personCode))
+                .withLanguage(language)
+                .build();
 
-      MobileIdResult midResult = resp.toMidResult(phoneNr);
-      if (midResult.getStatus() != MobileIdStatus.OK)
-        throw new MobileIdException(MobileIdFault.FAULT, null);
+      MidAuthenticationResponse res = midClient.getMobileIdConnector().authenticate(req);
 
-      return midResult;
-    } catch (SOAPFaultException sfe) {
-      Detail sfdetail = sfe.getFault().getDetail();
-      log.error(sfdetail.getTextContent(), sfe);
-      throw new MobileIdException(MobileIdFault.getFault(sfe.getFault().getFaultString()), sfdetail.getTextContent(), sfe);
-    }
-  }
-
-  private String generateChallenge() {
-    Random r = new Random();
-    return IntStream.range(0, 20)
-            .map(idx -> r.nextInt(16))
-            .mapToObj(Integer::toHexString)
-            .collect(Collectors.joining());
-  }
-
-  @RequiredArgsConstructor
-  private static class MidAuthResponseHolder {
-    Holder<Integer> sessionCode = h();
-    Holder<String> status = h(),
-            userIdCode = h(),
-            userGivenName = h(),
-            userSurname = h(),
-            userCountry = h(),
-            userCommonName = h(),
-            userCertData = h(),
-            challengeId = h(),
-            challenge = h(),
-            revocationData = h()
-            ;
-
-    public MobileIdResult toMidResult(String userPhoneNr) {
       return MobileIdResult.builder()
-              .sessionCode(sessionCode.value)
-              .status(MobileIdStatus.getStatus(status.value))
-              .challengeId(challengeId.value)
-              .userCountry(userCountry.value)
-              .userIdCode(userIdCode.value)
-              .userGivenName(userGivenName.value)
-              .userSurname(userSurname.value)
-              .userPhoneNr(userPhoneNr)
-              // .certificateData(userCertData.value)
               .timestamp(new Date())
+              .userPhoneNr(phoneNr)
+              .hash(authHash.getHashInBase64())
+              .sessionId(res.getSessionID())
+              .challengeId(verificationCode)
               .build();
+      
+    } catch (MidInternalErrorException e) {
+      log.warn(e.getMessage());
+      throw new MobileIdException(MobileIdFault.INTERNAL_ERROR, e);
+    } catch (MidInvalidPhoneNumberException e) {
+      throw new MobileIdException(MobileIdFault.INVALID_PHONE);
+    } catch (MidInvalidNationalIdentityNumberException e) {
+      throw new MobileIdException(MobileIdFault.INVALID_ID);
     }
   }
 
-  public MobileIdStatus checkAuthenticationStatus(int sessionCode) throws MobileIdException {
+  public MobileIdResult checkAuthenticationStatus(MobileIdResult midResult) throws MobileIdException {
     try {
-      Holder<String> status = h(), signature = h();
-      getPort().getMobileAuthenticateStatus(sessionCode, false, status, signature);
-      return MobileIdStatus.getStatus(status.value);
-    } catch (SOAPFaultException sfe) {
-      Detail sfdetail = sfe.getFault().getDetail();
-      log.error(sfdetail.getTextContent(), sfe);
-      throw new MobileIdException(MobileIdFault.FAULT, sfdetail.getTextContent(), sfe);
+      MidSessionStatus sessionStatus =
+              midClient.getMobileIdConnector().getAuthenticationSessionStatus(new MidSessionStatusRequest(midResult.getSessionId()));
+      if (sessionStatus != null) {
+        if (MobileIdStatus.RUNNING.is(sessionStatus.getState())) {
+          return midResult.toBuilder().status(MobileIdStatus.RUNNING).build();
+        }
+        if (MobileIdStatus.COMPLETE.is(sessionStatus.getState())) {
+          if (!MobileIdStatus.OK.is(sessionStatus.getResult())) {
+            throw new MobileIdException(sessionStatus.getResult());
+          }
+          MidAuthentication authentication =
+                  midClient.createMobileIdAuthentication(sessionStatus,
+                                                         MidAuthenticationHashToSign.newBuilder().withHashInBase64(midResult.getHash()).withHashType(MidHashType.SHA256).build());
+          MidAuthenticationResult result = new MidAuthenticationResponseValidator().validate(authentication);
+
+          if (result.isValid()) {
+            return midResult.toBuilder().status(MobileIdStatus.COMPLETE).identity(result.getAuthenticationIdentity()).build();
+          } else {
+            throw new MobileIdException(getAuthenticationError(result.getErrors()));
+          }
+        }
+      }
+      throw new MobileIdException(MobileIdFault.INTERNAL_ERROR);
+    } catch (MidSessionNotFoundException e) {
+      throw new MobileIdException(MobileIdFault.EXPIRED_TRANSACTION, e);
+    } catch (MidInternalErrorException e) {
+      log.warn(e.getMessage());
+      throw new MobileIdException(MobileIdFault.INTERNAL_ERROR, e);
     }
   }
-
-  private DigiDocServicePortType getPort() {
-    return new DigiDocService(wsdl).getDigiDocService();
-  }
-
-  private static <V> Holder<V> h() {
-    return new Holder<V>();
+  
+  private MobileIdFault getAuthenticationError(List<String> errors) {
+    if (errors.get(0).equals(MidAuthenticationError.SIGNATURE_VERIFICATION_FAILURE.getMessage())) {
+      return MobileIdFault.SIGNATURE_VERIFICATION_FAILURE;
+    } else {
+      return MobileIdFault.CERTIFICATE_EXPIRED;
+    }
   }
 }

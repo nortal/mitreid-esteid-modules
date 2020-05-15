@@ -13,7 +13,7 @@ plugins {
 
 allprojects {
 	group = 'com.nortal.oidc'
-	version = '0.3.3'
+	version = '0.4'
 	
 	repositories {
 		jcenter()
@@ -29,7 +29,7 @@ allprojects {
 	}
 	
 	ext.overlayDep = {
-		p('overlay', it, 'lightWarc')
+    p('overlay', it)
 	}
 	
 	ext.supportDep = {
