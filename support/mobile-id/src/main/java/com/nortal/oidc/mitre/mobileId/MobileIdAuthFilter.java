@@ -111,8 +111,13 @@ class MobileIdAuthFilter extends AbstractAuthenticationProcessingFilter {
 
     String personCode = StringUtils.trimToEmpty(personCodeInput).replaceAll("\\s", "");
     String phone = StringUtils.trimToEmpty(phoneInput).replaceAll("\\s", "");
-		if (!phone.matches("^\\+.*")) { // XXX: include other MID supported country prefixes
+    if (phone.matches("^372.*")) {
+      phone = "+" + phone;
+    } else if (!phone.matches("^\\+.*")) { // XXX: include other MID supported country prefixes
 			phone = "+372" + phone;
+		} else if (phone.matches("^\\+370.*")) {
+		  log.info("Will not start Mobile Id authentication with a Lithuanian number: {}", phone);
+		  throw new MobileIdException(MobileIdFault.INVALID_PHONE);
 		}
 
 		MidLanguage language = getLanguage(request);
