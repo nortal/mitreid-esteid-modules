@@ -86,7 +86,7 @@ class MobileIdAuthFilter extends AbstractAuthenticationProcessingFilter {
         return null;
       }
     } catch (MobileIdException mide) {
-      log.warn("", mide);
+      log.warn("Failed to continue with Mobile Id authentication: " + mide.getError());
       writeResponse(response, MIDResult.builder()
               .status(mide.getError())
               .build());
@@ -96,22 +96,37 @@ class MobileIdAuthFilter extends AbstractAuthenticationProcessingFilter {
 
   private void startMIDAuthentication(HttpServletRequest request, HttpServletResponse response)
           throws MobileIdException, IOException {
-    String personCode = request.getParameter("personCode");
-    String phone = request.getParameter("phone");
+    String personCodeInput = request.getParameter("personCode");
+    String phoneInput = request.getParameter("phone");
 
-    if (StringUtils.isBlank(personCode) && StringUtils.isBlank(phone)) {
+    if (StringUtils.isBlank(personCodeInput) && StringUtils.isBlank(phoneInput)) {
+      if (log.isDebugEnabled()) {
+        log.debug("Could not start Mobile Id authentication, because a required parameter is missing: phone = |{}| and person code = |{}|",
+                  phoneInput,
+                  personCodeInput);
+      }
       response.sendError(HttpServletResponse.SC_BAD_REQUEST);
       return;
     }
 
-    personCode = StringUtils.trimToEmpty(personCode).replaceAll("\\s", "");
-    phone = StringUtils.trimToEmpty(phone).replaceAll("\\s", "");
+    String personCode = StringUtils.trimToEmpty(personCodeInput).replaceAll("\\s", "");
+    String phone = StringUtils.trimToEmpty(phoneInput).replaceAll("\\s", "");
 		if (!phone.matches("^\\+.*")) { // XXX: include other MID supported country prefixes
 			phone = "+372" + phone;
 		}
 
+		MidLanguage language = getLanguage(request);
 
-    MobileIdResult midResult = mobileIdService.startAuthentication(personCode, phone, getLanguage(request));
+    if (log.isDebugEnabled()) {
+      log.debug("Starting Mobile Id authentication with phone = |{}| (normalized to |{}|) and person code = |{}| (normalized to |{}|) and language = {}",
+                phoneInput,
+                phone,
+                personCodeInput,
+                personCode,
+                language.name());
+    }
+
+    MobileIdResult midResult = mobileIdService.startAuthentication(personCode, phone, language);
     
     writeResponse(response, MIDResult.builder()
             .status("OK")
