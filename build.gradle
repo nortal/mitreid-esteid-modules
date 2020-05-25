@@ -13,7 +13,7 @@ plugins {
 
 allprojects {
 	group = 'com.nortal.oidc'
-	version = '0.4'
+	version = '0.4.2'
 	
 	repositories {
 		jcenter()
@@ -56,6 +56,7 @@ subprojects {
 	  	repositories {
 	        maven {
 	        	url 'https://api.bintray.com/maven/nortal/mitreid-esteid-modules/mitreid'
+	        	//url 'https://api.bintray.com/maven/jimmytheneutrino/maven/mitreid'
 	            credentials {
 	                username bintrayUsername
 	                password bintrayPassword
